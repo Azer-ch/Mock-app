@@ -9,8 +9,6 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=azer
       - MONGO_INITDB_ROOT_PASSWORD=azer
-    volumes:
-      - mongodata:/data/db
 
   mongo-express:
     image: mongo-express
@@ -34,5 +32,3 @@ services:
       - DB_URL=mongodb://azer:azer@mongo:27017
     depends_on:
       - mongo
-volumes:
-  mongodata:

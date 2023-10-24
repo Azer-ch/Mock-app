@@ -3,6 +3,7 @@ import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserResponseDto } from './dto/user-response.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
@@ -13,24 +14,22 @@ export class UserService {
       (user) => new UserResponseDto(user.name, user.age, user.email),
     );
   }
-  async findByEmail(email: string) {
-    return await this.model
-      .findOne({
-        email: email,
+  async findByName(name: string) {
+    const users = await this.model
+      .find({
+        name,
       })
       .exec();
+    return users.map(
+      (user) => new UserResponseDto(user.name, user.age, user.email),
+    );
   }
 
   async findById(id: string) {
     return await this.model.findById(id).exec();
   }
-  async createUser(user: User) {
-    if (await this.model.exists({ email: user.email })) {
-      throw new BadRequestException('User already exists');
-    }
-    const createdUser = await new this.model({
-      ...user,
-    }).save();
+  async createUser(user: CreateUserDto) {
+    const createdUser = await this.model.create(user);
     return new UserResponseDto(
       createdUser.name,
       createdUser.age,

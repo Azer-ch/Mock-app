@@ -52,7 +52,6 @@ This manual configuration can get tedious as we have to re-execute it whenever w
 #### Docker-compose:
 In order to orchestrate the launch of our different docker containers we can use a yaml file to define our services and the configuration that they need
 ```
-
 version: '3'
 
 services:
@@ -77,9 +76,7 @@ services:
     depends_on:
       - mongo
   nest-app:
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    image: azerch/nest-app:latest
     container_name: nest-app
     ports:
       - "3000:3000"
@@ -87,21 +84,25 @@ services:
       - DB_URL=mongodb://azer:azer@mongo:27017
     depends_on:
       - mongo
-```
+   ```
 Inside our services we define our containers giving them name and the images that these containers were created from.
 We can use the environment block to define our environment variables instead of doing so by the -e flag in the docker start command.
 the depends on block define precedence relationships between our containers since **mongo** needs to start before **mongo-express**.
 The advantage in using such a file is that docker will automatically create a network and bind our container's application to this network so that they can reach one another.
-We notice the presence of a build block that takes a dockerfile as input.This is used so that instead of having to run our application manually we define a blueprint inside the `Dockerfile` on how to create and run this application and turn it into an image that can be ran inside the `compose.yaml` file automatically(we will later on dive into Dockerfile and how it works).
-let's now start our containers using this file by running the command.
+We will need to build the image for **nest-app** using the following command:
 ```bash
-    sudo docker-compose -f compose.yaml up 
+    docker build -t azerch/nest-app:latest .
+```
+this will result in the creation of the azerch/nest-app with the latest tag.
+We then create our docker containers using the command.
+```bash
+    sudo docker-compose up 
 ```
 We notice that upon executing this command we get the following output:
 ```Creating network "mock-app_default" with the default driver``` which confirms that docker-compose does indeed create the network automatically.
 If we want to shut down these containers and remove them as well as the network we can run :
 ```bash
-    sudo docker-compose -f compose.yaml down 
+    sudo docker-compose down 
 ```
 #### DockerFile:
 This file acts as a blueprint that creates the image for our container:
@@ -133,3 +134,47 @@ we then create the main directory where our application file will reside
 We copy our dependencies inside the app directory and we run them.
 We notice the existence of two copy commands.This is due to the fact that docker has a caching mechanism and by copying only the package files first, Docker can cache this step separately. If there are no changes to the package files, Docker can reuse the cached layer during subsequent builds without having to reinstall the dependencies if they didn't change saving time.
 We then define the starting point of our application specifies in other words the default command that will be executed when a container is started.
+#### Jenkins
+we will use jenkins to create a CI/CD pipeline that actively polls our github repository each 1 minute and checks for any pushes then runs the following pipeline
+```
+pipeline {
+    agent any
+    stages {
+        stage('Checkout'){
+            steps {
+            checkout scmGit(branches: [[name: 'main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Azer-ch/Mock-app']])
+            }
+        }
+        stage('Build'){
+            steps {
+                sh 'docker build -t azerch/nest-app:latest .'
+            }
+        }
+        stage('Test'){
+            steps {
+            sh 'docker-compose down'
+            sh 'docker-compose up -d'
+            sh 'docker exec  nest-app /bin/bash -c "npm test"'
+            }
+        }
+        stage('Deploy'){
+            steps{
+                withCredentials([string(credentialsId: 'password', variable: 'password')]) {
+                    sh 'docker login -u azerch -p ${password}'
+                    sh 'docker push azerch/nest-app:latest'
+                }
+            }
+        }
+    }
+}
+```
+- Checkout stage:  
+    Fetches the code from the github repo
+- Build Stage:
+    Builds the docker image out of the Dockerfile
+- Test stage:
+    Stops any old containers and starts the newest containers with the updated image
+    runs jest unit tests to validate the new image
+- Deploy:
+    Pushes the new image to dockerhub
+  

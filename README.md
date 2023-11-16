@@ -177,4 +177,6 @@ pipeline {
     runs jest unit tests to validate the new image
 - Deploy:
     Pushes the new image to dockerhub
+- 
+![screenshot](screenshots/Screenshot%20from%202023-11-16%2016-13-09.png)
   

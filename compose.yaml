@@ -22,11 +22,8 @@ services:
     depends_on:
       - mongo
   nest-app:
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    image: azerch/nest-app:latest
     container_name: nest-app
-    image: azer/nest-app:latest
     ports:
       - "3000:3000"
     environment:

@@ -9,7 +9,7 @@ pipeline {
         stage('Test'){
             steps {
             sh 'docker-compose -f compose.yaml up -d'
-            sh 'jest'
+            sh 'npm test'
             }
         }
     }

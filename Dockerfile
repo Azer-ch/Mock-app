@@ -10,7 +10,7 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
-# Bundle app source
+# Copy copy the contents of the host machine into the app directory
 COPY . .
 
 # Expose the port your NestJS application is running on

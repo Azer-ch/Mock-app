@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Build'){
             steps {
-                sh 'docker-compose build'
+                sh 'docker-compose build -t azerch/nest-app'
             }
         }
         stage('Test'){

@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Build'){
             steps {
-                sh 'docker-compose build -t azerch/est-app .'
+                sh 'docker-compose build -t azerch/est-app:latest'
             }
         }
         stage('Test'){

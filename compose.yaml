@@ -26,6 +26,7 @@ services:
       context: ./
       dockerfile: Dockerfile
     container_name: nest-app
+    image: azer/nest-app:${IMAGE_TAG}
     ports:
       - "3000:3000"
     environment:
